@@ -23,6 +23,6 @@ class FloorplansController < ApplicationController
   private
 
   def floorplan_params
-    params.require(:floorplan).permit(:name, :image, :width, :height)
+    params.require(:floorplan).permit(:name, :image)
   end
 end
