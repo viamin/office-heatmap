@@ -1,0 +1,28 @@
+<div class="mx-auto max-w-xl p-6">
+  <h1 class="text-xl font-semibold mb-4">Upload floorplan</h1>
+
+  <%= form_with model: @floorplan, url: floorplan_path, method: :post, local: true, html: { multipart: true, class: "space-y-4" } do |f| %>
+    <div>
+      <%= f.label :name, class: "block text-sm font-medium" %>
+      <%= f.text_field :name, class: "mt-1 block w-full border rounded px-3 py-2" %>
+    </div>
+    <div>
+      <%= f.label :image, class: "block text-sm font-medium" %>
+      <%= f.file_field :image, class: "mt-1 block w-full" %>
+    </div>
+    <div class="flex gap-4">
+      <div>
+        <%= f.label :width, class: "block text-sm font-medium" %>
+        <%= f.number_field :width, class: "mt-1 block w-32 border rounded px-3 py-2" %>
+      </div>
+      <div>
+        <%= f.label :height, class: "block text-sm font-medium" %>
+        <%= f.number_field :height, class: "mt-1 block w-32 border rounded px-3 py-2" %>
+      </div>
+    </div>
+    <div>
+      <%= f.submit "Save", class: "bg-blue-600 text-white px-4 py-2 rounded" %>
+      <%= link_to "Back", floorplan_path, class: "ml-3 text-gray-600" %>
+    </div>
+  <% end %>
+</div>

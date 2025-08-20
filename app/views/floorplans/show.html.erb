@@ -1,0 +1,20 @@
+<div class="mx-auto max-w-7xl p-4 space-y-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-semibold">Office Heatmap</h1>
+    <% if admin_signed_in? %>
+      <%= link_to "Upload floorplan", upload_floorplan_path, class: "text-sm text-blue-600" %>
+    <% end %>
+  </div>
+
+  <% if @floorplan.image.attached? %>
+    <div data-controller="heatmap"
+         data-heatmap-image-url-value="<%= url_for(@floorplan.image) %>"
+         data-heatmap-votes-url-value="<%= votes_path %>"
+         data-heatmap-half-life-minutes-value="30"
+         data-heatmap-cutoff-minutes-value="120"
+         class="overflow-auto">
+    </div>
+  <% else %>
+    <div class="text-gray-600">No floorplan uploaded yet.</div>
+  <% end %>
+</div>

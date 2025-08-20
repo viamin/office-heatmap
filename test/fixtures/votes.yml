@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  visitor_uuid: MyString
+  ip_address: MyString
+  x: 1
+  'y': 1
+  value: 1
+  floorplan_id: 1
+
+two:
+  visitor_uuid: MyString
+  ip_address: MyString
+  x: 1
+  'y': 1
+  value: 1
+  floorplan_id: 1
