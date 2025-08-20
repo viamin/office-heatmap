@@ -21,24 +21,25 @@ A real-time office temperature heatmap application built with Ruby on Rails that
 ## Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/viamin/office-heatmap
    cd office-heatmap
    ```
 
 2. **Run the setup script**
+
    ```bash
    bin/setup
    ```
 
 3. **Start the development server**
+
    ```bash
    bin/dev
    ```
 
 The application will be available at `http://localhost:4000`
-
-
 
 ## Admin Access
 
@@ -141,8 +142,6 @@ yarn build:css
 # Watch for changes (development)
 yarn build --watch
 ```
-
-
 
 ## Architecture
 

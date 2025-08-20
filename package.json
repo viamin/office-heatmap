@@ -13,7 +13,6 @@
     "@hotwired/turbo-rails": "^8.0.16",
     "@rails/actioncable": "^8.0.201",
     "@tailwindcss/cli": "^4.1.12",
-    "heatmap.js": "^2.0.5",
     "tailwindcss": "^4.1.12"
   }
 }
