@@ -1,0 +1,76 @@
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="flex justify-center">
+      <svg class="h-12 w-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+      </svg>
+    </div>
+    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+      Office Heatmap Admin
+    </h2>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      Sign in to manage floorplans and monitor temperature data
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-6" }) do |f| %>
+        <div>
+          <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.email_field :email,
+                autocomplete: "email",
+                required: true,
+                class: "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors" %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1">
+            <%= f.password_field :password,
+                autocomplete: "current-password",
+                required: true,
+                class: "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors" %>
+          </div>
+        </div>
+
+        <% if devise_mapping.rememberable? %>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <%= f.check_box :remember_me, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+              <%= f.label :remember_me, class: "ml-2 block text-sm text-gray-900" %>
+            </div>
+          </div>
+        <% end %>
+
+        <div>
+          <%= f.submit "Sign in", class: "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" %>
+        </div>
+      <% end %>
+
+      <div class="mt-6">
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">Need help?</span>
+          </div>
+        </div>
+
+        <div class="mt-6 text-center">
+          <p class="text-sm text-gray-600">
+            Contact your system administrator for access credentials
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back to main app link -->
+  <div class="mt-8 text-center">
+    <%= link_to "← Back to Heatmap", root_path, class: "text-sm text-blue-600 hover:text-blue-800 transition-colors" %>
+  </div>
+</div>
