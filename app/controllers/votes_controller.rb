@@ -1,5 +1,4 @@
 class VotesController < ApplicationController
-
   def index
     floorplan = Floorplan.first!
     votes = floorplan.votes.recent
