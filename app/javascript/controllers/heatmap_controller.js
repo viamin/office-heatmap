@@ -14,12 +14,11 @@ export default class extends Controller {
   connect() {
     this.loadImage().then(() => {
       this.createHeatmap()
+      this.addHeaderButtons()
       this.subscribeToChannel()
       this.setupKonamiCode()
     })
   }
-
-
 
   async loadImage() {
     console.log("Loading image from:", this.imageUrlValue)
@@ -35,6 +34,95 @@ export default class extends Controller {
       }
       this.image.src = this.imageUrlValue
     })
+  }
+
+  addHeaderButtons() {
+    // Find the header container
+    const header = document.querySelector('h1').parentElement
+
+    // Create button container
+    const buttonContainer = document.createElement('div')
+    buttonContainer.className = 'flex items-center space-x-2'
+
+    // Legend toggle button
+    const legendBtn = document.createElement('button')
+    legendBtn.className = 'px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors'
+    legendBtn.innerHTML = `
+      <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+      </svg>
+      Legend
+    `
+    legendBtn.addEventListener('click', () => this.toggleLegend())
+
+    // Time travel toggle button
+    const timeTravelBtn = document.createElement('button')
+    timeTravelBtn.className = 'px-3 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded transition-colors'
+    timeTravelBtn.innerHTML = `
+      <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+      </svg>
+      Time Travel
+    `
+    timeTravelBtn.addEventListener('click', () => this.toggleTimeTravel())
+
+    buttonContainer.appendChild(legendBtn)
+    buttonContainer.appendChild(timeTravelBtn)
+
+    // Insert buttons after the title
+    header.appendChild(buttonContainer)
+
+    // Store references
+    this.legendBtn = legendBtn
+    this.timeTravelBtn = timeTravelBtn
+  }
+
+  toggleLegend() {
+    if (this.legend && this.legend.style.display !== 'none') {
+      this.legend.style.display = 'none'
+      this.legendBtn.innerHTML = `
+        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+        </svg>
+        Show Legend
+      `
+    } else {
+      if (this.legend) {
+        this.legend.style.display = 'block'
+      } else {
+        this.createLegend()
+      }
+      this.legendBtn.innerHTML = `
+        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+        </svg>
+        Legend
+      `
+    }
+  }
+
+  toggleTimeTravel() {
+    if (this.timeSliderContainer && this.timeSliderContainer.style.display !== 'none') {
+      this.timeSliderContainer.style.display = 'none'
+      this.timeTravelBtn.innerHTML = `
+        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+        </svg>
+        Show Time Travel
+      `
+    } else {
+      if (this.timeSliderContainer) {
+        this.timeSliderContainer.style.display = 'block'
+      } else {
+        this.createTimeSlider()
+      }
+      this.timeTravelBtn.innerHTML = `
+        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+        </svg>
+        Time Travel
+      `
+    }
   }
 
   createHeatmap() {
@@ -68,10 +156,10 @@ export default class extends Controller {
     container.appendChild(overlay)
     this.element.appendChild(container)
 
-    // Add legend
+    // Add legend by default
     this.createLegend()
 
-                // Small delay to ensure DOM is ready
+    // Small delay to ensure DOM is ready
     setTimeout(() => {
       console.log("Creating custom overlay canvas")
 
@@ -104,18 +192,147 @@ export default class extends Controller {
     }, 100)
   }
 
+  createTimeSlider() {
+    const sliderContainer = document.createElement("div")
+    sliderContainer.className = "fixed bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200 z-40"
+    sliderContainer.style.minWidth = "300px"
+
+    sliderContainer.innerHTML = `
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-gray-800 flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+          </svg>
+          Time Travel
+        </h3>
+        <div class="flex items-center space-x-2">
+          <button class="text-xs text-blue-600 hover:text-blue-800 transition-colors" id="reset-time-btn">
+            Reset to Now
+          </button>
+          <button class="text-xs text-gray-400 hover:text-gray-600 transition-colors" id="hide-time-travel-btn">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <div class="flex justify-between text-xs text-gray-600">
+          <span id="time-display">Now</span>
+          <span id="time-offset">0 min</span>
+        </div>
+
+        <input
+          type="range"
+          id="time-slider"
+          min="-240"
+          max="60"
+          value="0"
+          step="1"
+          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+        />
+
+        <div class="flex justify-between text-xs text-gray-500">
+          <span>4 hours ago</span>
+          <span>1 hour ahead</span>
+        </div>
+      </div>
+
+      <div class="mt-3 text-xs text-gray-500">
+        <div class="flex items-center">
+          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+          </svg>
+          Drag to see vote history and decay
+        </div>
+      </div>
+    `
+
+    document.body.appendChild(sliderContainer)
+    this.timeSliderContainer = sliderContainer
+
+    // Set up slider functionality
+    const slider = sliderContainer.querySelector('#time-slider')
+    const timeDisplay = sliderContainer.querySelector('#time-display')
+    const timeOffset = sliderContainer.querySelector('#time-offset')
+    const resetBtn = sliderContainer.querySelector('#reset-time-btn')
+    const hideBtn = sliderContainer.querySelector('#hide-time-travel-btn')
+
+    // Initialize time state
+    this.currentTimeOffset = 0
+    this.isTimeTraveling = false
+
+    // Update time display
+    const updateTimeDisplay = () => {
+      const now = new Date()
+      const targetTime = new Date(now.getTime() + (this.currentTimeOffset * 60 * 1000))
+
+      timeDisplay.textContent = targetTime.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      })
+
+      const offsetText = this.currentTimeOffset === 0 ? 'Now' :
+        this.currentTimeOffset > 0 ? `+${this.currentTimeOffset} min` :
+        `${this.currentTimeOffset} min`
+      timeOffset.textContent = offsetText
+    }
+
+    // Handle slider input
+    slider.addEventListener('input', (e) => {
+      this.currentTimeOffset = parseInt(e.target.value)
+      this.isTimeTraveling = this.currentTimeOffset !== 0
+      updateTimeDisplay()
+      this.renderHeatmapAtTime()
+    })
+
+    // Handle reset button
+    resetBtn.addEventListener('click', () => {
+      slider.value = 0
+      this.currentTimeOffset = 0
+      this.isTimeTraveling = false
+      updateTimeDisplay()
+      this.renderHeatmapAtTime()
+    })
+
+    // Handle hide button
+    hideBtn.addEventListener('click', () => {
+      this.toggleTimeTravel()
+    })
+
+    // Initial display
+    updateTimeDisplay()
+  }
+
+  renderHeatmapAtTime() {
+    if (this.currentVotes) {
+      this.renderHeatmap(this.currentVotes, { append: false })
+    }
+  }
+
   createLegend() {
     const legend = document.createElement("div")
     legend.className = "fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200 z-40"
     legend.style.maxWidth = "280px"
+    legend.style.position = "fixed" // Ensure fixed positioning
 
     legend.innerHTML = `
-      <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center">
-        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-        </svg>
-        Temperature Legend
-      </h3>
+      <div class="relative">
+        <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+          </svg>
+          Temperature Legend
+        </h3>
+
+        <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors" id="hide-legend-btn">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
 
       <div class="space-y-3">
         <div class="flex items-center">
@@ -165,18 +382,18 @@ export default class extends Controller {
           </div>
         </div>
       </div>
-
-      <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors" onclick="this.parentElement.remove()">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-      </button>
     `
 
     document.body.appendChild(legend)
 
     // Store reference for cleanup
     this.legend = legend
+
+    // Add hide button functionality
+    const hideBtn = legend.querySelector('#hide-legend-btn')
+    hideBtn.addEventListener('click', () => {
+      this.toggleLegend()
+    })
   }
 
   handleClick(event, container) {
@@ -332,11 +549,13 @@ export default class extends Controller {
       return
     }
 
+    // Calculate the target time based on current time and offset
     const now = Date.now()
+    const targetTime = now + (this.currentTimeOffset * 60 * 1000)
     const cutoffMs = this.cutoffMinutesValue * 60 * 1000
     const halfLifeMs = this.halfLifeMinutesValue * 60 * 1000
 
-        // Clear the canvas completely
+    // Clear the canvas completely
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
     // Get all votes to render (current + new if appending)
@@ -346,8 +565,8 @@ export default class extends Controller {
     }
     allVotes.push(...votes)
 
-        // Group votes by proximity and aggregate their values
-    const voteGroups = this.groupVotesByProximity(allVotes, now, cutoffMs, halfLifeMs)
+    // Group votes by proximity and aggregate their values
+    const voteGroups = this.groupVotesByProximity(allVotes, targetTime, cutoffMs, halfLifeMs)
 
     // Render aggregated vote groups
     voteGroups.forEach(group => {
@@ -362,13 +581,13 @@ export default class extends Controller {
     console.log("Custom overlay rendered")
   }
 
-    groupVotesByProximity(votes, now, cutoffMs, halfLifeMs) {
+  groupVotesByProximity(votes, targetTime, cutoffMs, halfLifeMs) {
     const groups = []
     const groupRadius = this.radiusValue * 0.8 // Votes within this distance are grouped together
 
     votes.forEach((vote) => {
       const createdAt = new Date(vote.created_at).getTime()
-      const age = now - createdAt
+      const age = targetTime - createdAt
       if (age > cutoffMs) return
 
       const decay = Math.pow(0.5, age / halfLifeMs)
@@ -504,6 +723,9 @@ export default class extends Controller {
     }
     if (this.legend) {
       this.legend.remove()
+    }
+    if (this.timeSliderContainer) {
+      this.timeSliderContainer.remove()
     }
   }
 }
