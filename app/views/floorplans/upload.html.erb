@@ -1,18 +1,97 @@
-<div class="mx-auto max-w-xl p-6">
-  <h1 class="text-xl font-semibold mb-4">Upload floorplan</h1>
+<div class="min-h-screen bg-gray-50">
+  <!-- Admin Navigation Bar -->
+  <nav class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-semibold text-gray-900">Office Heatmap Admin</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <%= link_to "View Heatmap", floorplan_path, class: "text-sm text-blue-600 hover:text-blue-800 transition-colors" %>
+          <span class="text-gray-400">|</span>
+          <%= link_to "Sign Out", destroy_admin_session_path, data: { turbo_method: :delete }, class: "text-sm text-gray-600 hover:text-gray-800 transition-colors" %>
+        </div>
+      </div>
+    </div>
+  </nav>
 
-  <%= form_with model: @floorplan, url: floorplan_path, method: :post, local: true, html: { multipart: true, class: "space-y-4" } do |f| %>
-    <div>
-      <%= f.label :name, class: "block text-sm font-medium" %>
-      <%= f.text_field :name, class: "mt-1 block w-full border rounded px-3 py-2" %>
+  <!-- Main Content -->
+  <div class="max-w-2xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Upload Floorplan</h2>
+        <p class="text-gray-600">Upload a new floorplan image or update the existing one.</p>
+      </div>
+
+      <%= form_with model: @floorplan, url: floorplan_path, method: :post, local: true, html: { multipart: true, class: "space-y-6" } do |f| %>
+        <!-- Floorplan Name -->
+        <div>
+          <%= f.label :name, "Floorplan Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.text_field :name,
+              placeholder: "e.g., Main Office - 2nd Floor",
+              class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" %>
+          <p class="mt-1 text-sm text-gray-500">Give your floorplan a descriptive name to help identify it.</p>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <%= f.label :image, "Floorplan Image", class: "block text-sm font-medium text-gray-700 mb-2" %>
+
+          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+            <div class="space-y-1 text-center">
+              <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <div class="flex text-sm text-gray-600">
+                <label for="floorplan_image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                  <span>Upload a file</span>
+                  <%= f.file_field :image,
+                      accept: "image/*",
+                      class: "sr-only",
+                      id: "floorplan_image" %>
+                </label>
+                <p class="pl-1">or drag and drop</p>
+              </div>
+              <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+            </div>
+          </div>
+
+          <% if @floorplan.image.attached? %>
+            <div class="mt-3 p-3 bg-gray-50 rounded-md">
+              <p class="text-sm text-gray-600 mb-2">Current image:</p>
+              <div class="flex items-center space-x-3">
+                <%= image_tag @floorplan.image, class: "h-16 w-auto rounded border", alt: "Current floorplan" %>
+                <div>
+                  <p class="text-sm font-medium text-gray-900"><%= @floorplan.image.filename %></p>
+                  <p class="text-xs text-gray-500"><%= number_to_human_size(@floorplan.image.byte_size) %></p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+          <div class="flex items-center space-x-4">
+            <%= link_to "Cancel", floorplan_path, class: "text-sm text-gray-600 hover:text-gray-800 transition-colors" %>
+            <%= link_to "View Heatmap", floorplan_path, class: "text-sm text-blue-600 hover:text-blue-800 transition-colors" %>
+          </div>
+          <div class="flex items-center space-x-3">
+            <%= f.submit "Save Floorplan", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" %>
+          </div>
+        </div>
+      <% end %>
     </div>
-    <div>
-      <%= f.label :image, class: "block text-sm font-medium" %>
-      <%= f.file_field :image, class: "mt-1 block w-full" %>
+
+    <!-- Help Section -->
+    <div class="mt-8 bg-blue-50 rounded-lg p-4">
+      <h3 class="text-sm font-medium text-blue-900 mb-2">Tips for best results:</h3>
+      <ul class="text-sm text-blue-800 space-y-1">
+        <li>• Use high-resolution images (1600x1200 or larger recommended)</li>
+        <li>• Ensure the floorplan is clearly visible and well-lit</li>
+        <li>• Keep file sizes under 10MB for optimal performance</li>
+        <li>• Use PNG or JPG format for best compatibility</li>
+      </ul>
     </div>
-    <div>
-      <%= f.submit "Save", class: "bg-blue-600 text-white px-4 py-2 rounded" %>
-      <%= link_to "Back", floorplan_path, class: "ml-3 text-gray-600" %>
-    </div>
-  <% end %>
+  </div>
 </div>
