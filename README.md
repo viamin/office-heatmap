@@ -2,6 +2,10 @@
 
 A real-time office temperature heatmap application built with Ruby on Rails that allows users to vote on temperature comfort levels in different areas of the office and visualize temperature zones through an interactive heatmap.
 
+<img width="738" height="727" alt="Screenshot 2025-08-24 at 12 41 56 PM" src="https://github.com/user-attachments/assets/691b8198-fd6b-4e65-8536-6708f7ceb6bd" />
+
+*“[Star Trek TNG Reboot Bridge](https://www.deviantart.com/spidertrekfan616/art/Star-Trek-TNG-Reboot-Bridge-323323476)”* by [Spidertrekfan616](https://www.deviantart.com/spidertrekfan616), licensed under [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/).
+
 ## Features
 
 - **Interactive Temperature Heatmap**: Real-time visualization of temperature comfort zones across the office
