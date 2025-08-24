@@ -547,7 +547,8 @@ export default class extends Controller {
 
     // Calculate the target time based on current time and offset
     const now = Date.now()
-    const targetTime = now + (this.currentTimeOffset * 60 * 1000)
+    const timeOffset = this.currentTimeOffset || 0
+    const targetTime = now + (timeOffset * 60 * 1000)
     const cutoffMs = this.cutoffMinutesValue * 60 * 1000
     const halfLifeMs = this.halfLifeMinutesValue * 60 * 1000
 
@@ -560,13 +561,13 @@ export default class extends Controller {
       allVotes = [...this.currentVotes]
     }
     allVotes.push(...votes)
-
+    
     // Group votes by proximity and aggregate their values
     const voteGroups = this.groupVotesByProximity(allVotes, targetTime, cutoffMs, halfLifeMs)
 
     // Render aggregated vote groups
     voteGroups.forEach(group => {
-      const color = this.getColorForAggregatedVotes(group.totalValue, group.voteCount)
+      const color = this.getColorForAggregatedVotes(group.totalValue, group.totalIntensity)
       const intensity = Math.min(1.0, group.totalIntensity)
       const radius = this.radiusValue * (0.5 + (group.voteCount * 0.1)) // Larger radius for more votes
 
@@ -584,7 +585,12 @@ export default class extends Controller {
     votes.forEach((vote) => {
       const createdAt = new Date(vote.created_at).getTime()
       const age = targetTime - createdAt
+      
+      // Skip votes that are too old (beyond cutoff)
       if (age > cutoffMs) return
+      
+      // Skip votes that were created after the target time (future votes when time traveling)
+      if (age < 0) return
 
       const decay = Math.pow(0.5, age / halfLifeMs)
       const weightedValue = vote.value * decay
@@ -618,14 +624,14 @@ export default class extends Controller {
     return groups
   }
 
-  getColorForAggregatedVotes(totalValue, voteCount) {
-    // Calculate average vote value
-    const avgValue = totalValue / voteCount
+  getColorForAggregatedVotes(totalValue, totalIntensity) {
+    // Calculate weighted average vote value
+    const avgValue = totalIntensity > 0 ? totalValue / totalIntensity : 0
 
     if (avgValue < -0.33) {
-      return '#1d4ed8' // Blue for predominantly cold
+      return '#3b82f6' // Blue for predominantly cold
     } else if (avgValue > 0.33) {
-      return '#dc2626' // Red for predominantly hot
+      return '#ef4444' // Red for predominantly hot
     } else {
       return '#22c55e' // Green for predominantly comfortable or mixed
     }
