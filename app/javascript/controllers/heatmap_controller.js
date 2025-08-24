@@ -585,7 +585,12 @@ export default class extends Controller {
     votes.forEach((vote) => {
       const createdAt = new Date(vote.created_at).getTime()
       const age = targetTime - createdAt
+      
+      // Skip votes that are too old (beyond cutoff)
       if (age > cutoffMs) return
+      
+      // Skip votes that were created after the target time (future votes when time traveling)
+      if (age < 0) return
 
       const decay = Math.pow(0.5, age / halfLifeMs)
       const weightedValue = vote.value * decay
