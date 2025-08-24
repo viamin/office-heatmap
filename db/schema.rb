@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_20_220518) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_24_200356) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,6 +58,27 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_20_220518) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "radius", default: 50
+  end
+
+  create_table "thermostat_settings", force: :cascade do |t|
+    t.bigint "thermostat_id", null: false
+    t.decimal "temperature", precision: 4, scale: 1
+    t.bigint "admin_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_id"], name: "index_thermostat_settings_on_admin_id"
+    t.index ["thermostat_id"], name: "index_thermostat_settings_on_thermostat_id"
+  end
+
+  create_table "thermostats", force: :cascade do |t|
+    t.bigint "floorplan_id", null: false
+    t.string "name"
+    t.integer "x"
+    t.integer "y"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["floorplan_id"], name: "index_thermostats_on_floorplan_id"
   end
 
   create_table "votes", force: :cascade do |t|
@@ -74,4 +95,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_20_220518) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "thermostat_settings", "admins"
+  add_foreign_key "thermostat_settings", "thermostats"
+  add_foreign_key "thermostats", "floorplans"
 end

@@ -8,6 +8,8 @@
             <h1 class="text-xl font-semibold text-gray-900">Office Heatmap Admin</h1>
           </div>
           <div class="flex items-center space-x-4">
+            <%= link_to "Edit Settings", edit_floorplan_path, class: "text-sm text-blue-600 hover:text-blue-800 transition-colors" %>
+            <span class="text-gray-400">|</span>
             <%= link_to "Upload Floorplan", upload_floorplan_path, class: "text-sm text-blue-600 hover:text-blue-800 transition-colors" %>
             <span class="text-gray-400">|</span>
             <%= link_to "Sign Out", destroy_admin_session_path, data: { turbo_method: :delete }, class: "text-sm text-gray-600 hover:text-gray-800 transition-colors" %>
@@ -30,8 +32,11 @@
       <div data-controller="heatmap"
            data-heatmap-image-url-value="<%= url_for(@floorplan.image) %>"
            data-heatmap-votes-url-value="<%= votes_path %>"
+           data-heatmap-thermostats-url-value="<%= admin_signed_in? ? thermostats_path : '' %>"
            data-heatmap-half-life-minutes-value="30"
            data-heatmap-cutoff-minutes-value="120"
+           data-heatmap-radius-value="<%= @floorplan.radius || 50 %>"
+           data-heatmap-admin-value="<%= admin_signed_in? %>"
            class="overflow-auto">
       </div>
     <% else %>

@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  floorplan: one
+  name: MyString
+  x: 1
+  'y': 1
+
+two:
+  floorplan: two
+  name: MyString
+  x: 1
+  'y': 1

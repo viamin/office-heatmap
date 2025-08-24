@@ -14,9 +14,15 @@ Rails.application.routes.draw do
 
   resource :floorplan, only: [ :show, :create ] do
     get :upload
+    get :edit
+    patch :update
   end
 
   resources :votes, only: [ :index, :create ]
+  
+  # Admin-only routes for thermostats
+  resources :thermostats, only: [ :index, :create, :update, :destroy ]
+  resources :thermostat_settings, only: [ :create ]
 
   root to: "floorplans#show"
 end

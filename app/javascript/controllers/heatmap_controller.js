@@ -6,9 +6,11 @@ export default class extends Controller {
   static values = {
     imageUrl: String,
     votesUrl: String,
+    thermostatsUrl: String,
     halfLifeMinutes: { type: Number, default: 30 },
     cutoffMinutes: { type: Number, default: 120 },
-    radius: { type: Number, default: 50 }
+    radius: { type: Number, default: 50 },
+    admin: { type: Boolean, default: false }
   }
 
   connect() {
@@ -17,6 +19,10 @@ export default class extends Controller {
       this.addHeaderButtons()
       this.subscribeToChannel()
       this.setupKonamiCode()
+      
+      if (this.adminValue && this.thermostatsUrlValue) {
+        this.loadThermostats()
+      }
     })
   }
 
@@ -306,6 +312,11 @@ export default class extends Controller {
     if (this.currentVotes) {
       this.renderHeatmap(this.currentVotes, { append: false })
     }
+    
+    // Also update thermostat displays for time travel
+    if (this.adminValue && this.thermostats) {
+      this.renderThermostats()
+    }
   }
 
   createLegend() {
@@ -377,6 +388,20 @@ export default class extends Controller {
             </div>
           </div>
         </div>
+        
+        ${this.adminValue ? `
+        <div class="border-t border-gray-200 pt-3 mt-3">
+          <div class="text-xs text-gray-600 mb-2">Admin Controls:</div>
+          <div class="flex items-center text-xs text-gray-500">
+            <span class="mr-2">🌡️</span>
+            <span>Thermostats - Click to set temperature</span>
+          </div>
+          <div class="flex items-center text-xs text-gray-500 mt-1">
+            <span class="mr-2">⇧+Click</span>
+            <span>Place new thermostat</span>
+          </div>
+        </div>
+        ` : ''}
       </div>
     `
 
@@ -410,6 +435,21 @@ export default class extends Controller {
       finalX: x,
       finalY: y
     })
+
+    // Check if clicked on a thermostat (admin only)
+    if (this.adminValue) {
+      const clickedThermostat = this.findThermostatAtPosition(x, y)
+      if (clickedThermostat) {
+        this.showThermostatModal(clickedThermostat)
+        return
+      }
+      
+      // Check for Shift+Click to place thermostats (admin only)
+      if (event.shiftKey) {
+        this.showThermostatPlacementModal(x, y)
+        return
+      }
+    }
 
     this.showVoteModal(x, y)
   }
@@ -718,6 +758,326 @@ export default class extends Controller {
     this.renderHeatmap(testVotes, { append: true })
   }
 
+  // Thermostat functionality (admin only)
+  async loadThermostats() {
+    if (!this.thermostatsUrlValue) return
+
+    try {
+      const response = await fetch(this.thermostatsUrlValue, {
+        headers: { Accept: 'application/json' }
+      })
+      this.thermostats = await response.json()
+      console.log('Loaded thermostats:', this.thermostats)
+      this.renderThermostats()
+    } catch (error) {
+      console.error('Failed to load thermostats:', error)
+    }
+  }
+
+  renderThermostats() {
+    if (!this.thermostats || !this.adminValue) return
+
+    // Clear existing thermostat elements
+    const existingThermostats = this.element.querySelectorAll('.thermostat-marker')
+    existingThermostats.forEach(el => el.remove())
+
+    const targetTime = Date.now() + ((this.currentTimeOffset || 0) * 60 * 1000)
+
+    this.thermostats.forEach(thermostat => {
+      this.drawThermostat(thermostat, targetTime)
+    })
+  }
+
+  drawThermostat(thermostat, targetTime) {
+    const container = this.element.querySelector('div[style*="position: relative"]')
+    if (!container) return
+
+    const marker = document.createElement('div')
+    marker.className = 'thermostat-marker'
+    marker.style.cssText = `
+      position: absolute;
+      left: ${thermostat.x}px;
+      top: ${thermostat.y}px;
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: 3px solid #ef4444;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 10;
+      transform: translate(-50%, -50%);
+    `
+    marker.innerHTML = '🌡️'
+    marker.title = `${thermostat.name} - Click to set temperature`
+    
+    marker.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.showThermostatModal(thermostat)
+    })
+
+    // Determine which temperature to show based on time travel
+    let displayTemperature = null
+    const isTimeTraveling = this.currentTimeOffset && this.currentTimeOffset !== 0
+    
+    if (isTimeTraveling) {
+      // For time travel, we would need to fetch historical data
+      // For now, show current temperature with a visual indicator
+      displayTemperature = thermostat.current_temperature
+      if (displayTemperature) {
+        marker.style.opacity = '0.7' // Make it semi-transparent to indicate historical view
+      }
+    } else {
+      displayTemperature = thermostat.current_temperature
+    }
+
+    // Add temperature display if there's a temperature setting
+    if (displayTemperature) {
+      const tempDisplay = document.createElement('div')
+      tempDisplay.style.cssText = `
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(239, 68, 68, ${isTimeTraveling ? '0.7' : '0.9'});
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+        ${isTimeTraveling ? 'border: 1px dashed white;' : ''}
+      `
+      tempDisplay.textContent = `${displayTemperature}°F${isTimeTraveling ? ' (historical)' : ''}`
+      marker.appendChild(tempDisplay)
+    }
+
+    container.appendChild(marker)
+  }
+
+  findThermostatAtPosition(x, y) {
+    if (!this.thermostats) return null
+
+    const threshold = 20 // pixels
+    return this.thermostats.find(thermostat => {
+      const distance = Math.sqrt(
+        Math.pow(thermostat.x - x, 2) + Math.pow(thermostat.y - y, 2)
+      )
+      return distance <= threshold
+    })
+  }
+
+  showThermostatPlacementModal(x, y) {
+    const backdrop = document.createElement('div')
+    backdrop.className = 'thermostat-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
+
+    const modal = document.createElement('div')
+    modal.className = 'bg-white rounded-lg p-6 max-w-sm mx-4 shadow-xl'
+
+    modal.innerHTML = `
+      <h3 class="text-lg font-semibold mb-4 text-center">Place Thermostat</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Thermostat Name</label>
+          <input type="text" id="thermostat-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Zone A">
+        </div>
+        <div class="flex gap-3">
+          <button id="place-thermostat" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            Place Thermostat
+          </button>
+          <button id="cancel-placement" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `
+
+    backdrop.appendChild(modal)
+    document.body.appendChild(backdrop)
+
+    const nameInput = modal.querySelector('#thermostat-name')
+    const placeButton = modal.querySelector('#place-thermostat')
+    const cancelButton = modal.querySelector('#cancel-placement')
+
+    nameInput.focus()
+
+    placeButton.addEventListener('click', async () => {
+      const name = nameInput.value.trim()
+      if (!name) {
+        alert('Please enter a thermostat name')
+        return
+      }
+
+      await this.createThermostat(x, y, name)
+      backdrop.remove()
+    })
+
+    cancelButton.addEventListener('click', () => {
+      backdrop.remove()
+    })
+
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) backdrop.remove()
+    })
+  }
+
+  showThermostatModal(thermostat) {
+    const backdrop = document.createElement('div')
+    backdrop.className = 'thermostat-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
+
+    const modal = document.createElement('div')
+    modal.className = 'bg-white rounded-lg p-6 max-w-sm mx-4 shadow-xl'
+
+    modal.innerHTML = `
+      <h3 class="text-lg font-semibold mb-4 text-center">${thermostat.name}</h3>
+      <div class="space-y-4">
+        ${thermostat.current_temperature ? 
+          `<div class="text-center">
+            <div class="text-3xl font-bold text-gray-900">${thermostat.current_temperature}°F</div>
+            <div class="text-sm text-gray-500">Current Setting</div>
+          </div>` : 
+          `<div class="text-center text-gray-500">No temperature set</div>`
+        }
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Set Temperature (°F)</label>
+          <input type="number" id="temperature-input" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="50" max="90" step="0.5" placeholder="72">
+        </div>
+        <div class="flex gap-3">
+          <button id="set-temperature" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            Set Temperature
+          </button>
+          <button id="delete-thermostat" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            Delete
+          </button>
+          <button id="close-thermostat" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    `
+
+    backdrop.appendChild(modal)
+    document.body.appendChild(backdrop)
+
+    const tempInput = modal.querySelector('#temperature-input')
+    const setButton = modal.querySelector('#set-temperature')
+    const deleteButton = modal.querySelector('#delete-thermostat')
+    const closeButton = modal.querySelector('#close-thermostat')
+
+    tempInput.focus()
+
+    setButton.addEventListener('click', async () => {
+      const temperature = parseFloat(tempInput.value)
+      if (!temperature || temperature < 50 || temperature > 90) {
+        alert('Please enter a temperature between 50-90°F')
+        return
+      }
+
+      await this.setThermostatTemperature(thermostat.id, temperature)
+      backdrop.remove()
+    })
+
+    deleteButton.addEventListener('click', async () => {
+      if (confirm(`Delete thermostat "${thermostat.name}"?`)) {
+        await this.deleteThermostat(thermostat.id)
+        backdrop.remove()
+      }
+    })
+
+    closeButton.addEventListener('click', () => {
+      backdrop.remove()
+    })
+
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) backdrop.remove()
+    })
+  }
+
+  async createThermostat(x, y, name) {
+    try {
+      const response = await fetch(this.thermostatsUrlValue, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+          thermostat: { name, x, y }
+        })
+      })
+
+      if (response.ok) {
+        const newThermostat = await response.json()
+        this.thermostats = this.thermostats || []
+        this.thermostats.push(newThermostat)
+        this.renderThermostats()
+      } else {
+        const error = await response.json()
+        alert(error.errors?.join(', ') || 'Failed to create thermostat')
+      }
+    } catch (error) {
+      console.error('Error creating thermostat:', error)
+      alert('Failed to create thermostat')
+    }
+  }
+
+  async setThermostatTemperature(thermostatId, temperature) {
+    try {
+      const response = await fetch('/thermostat_settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+          thermostat_id: thermostatId,
+          temperature: temperature
+        })
+      })
+
+      if (response.ok) {
+        // Update the thermostat in our local data
+        const thermostat = this.thermostats.find(t => t.id === thermostatId)
+        if (thermostat) {
+          thermostat.current_temperature = temperature
+          thermostat.last_updated = new Date().toISOString()
+        }
+        this.renderThermostats()
+      } else {
+        const error = await response.json()
+        alert(error.errors?.join(', ') || 'Failed to set temperature')
+      }
+    } catch (error) {
+      console.error('Error setting temperature:', error)
+      alert('Failed to set temperature')
+    }
+  }
+
+  async deleteThermostat(thermostatId) {
+    try {
+      const response = await fetch(`${this.thermostatsUrlValue}/${thermostatId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      })
+
+      if (response.ok) {
+        this.thermostats = this.thermostats.filter(t => t.id !== thermostatId)
+        this.renderThermostats()
+      } else {
+        alert('Failed to delete thermostat')
+      }
+    } catch (error) {
+      console.error('Error deleting thermostat:', error)
+      alert('Failed to delete thermostat')
+    }
+  }
+
   disconnect() {
     if (this.subscription) this.subscription.unsubscribe()
     if (this.konamiListener) {
@@ -729,5 +1089,9 @@ export default class extends Controller {
     if (this.timeSliderContainer) {
       this.timeSliderContainer.remove()
     }
+    
+    // Clean up thermostat markers
+    const thermostatMarkers = document.querySelectorAll('.thermostat-marker')
+    thermostatMarkers.forEach(marker => marker.remove())
   }
 }
